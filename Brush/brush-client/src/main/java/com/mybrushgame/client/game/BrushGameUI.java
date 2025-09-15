@@ -3,9 +3,14 @@ package com.mybrushgame.client.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mybrushgame.client.cards.Player;
 import com.mybrushgame.client.ui.HandUI;
@@ -58,8 +63,8 @@ public class BrushGameUI extends ApplicationAdapter {
         mainTable.bottom().add(handUI.getTable()).expandX();
 
         stage.addActor(mainTable);
-        seatUI.setPosition(stage.getWidth(), stage.getHeight());
         stage.addActor(seatUI.getTable());
+        seatUI.update();
 
         // Initial render
         refreshUI();
@@ -69,6 +74,23 @@ public class BrushGameUI extends ApplicationAdapter {
         scoreUI.update(gameLogic.getPlayers());
         tableUI.update(gameLogic.getTableCards());
         handUI.update();
+        // Let AI play if it's their turn
+        while (!(gameLogic.getCurrentPlayer().equals(humanPlayer)) && !gameLogic.isGameOver()) {
+            playAITurns();
+            seatUI.update();
+        }
+
+        // If all players are out of cards but deck still has cards → deal new ones
+        if (gameLogic.allHandsEmpty() && !gameLogic.getDeck().isEmpty()) {
+            gameLogic.dealNewRound();
+            handUI.update(); // refresh human hand
+        }
+        if (gameLogic.isGameOver()) {
+            Player winner = gameLogic.getWinner();
+            if (winner != null) {
+                showWinner(winner.getName());
+            }
+        }
     }
 
     // Simple AI turn logic
@@ -96,4 +118,45 @@ public class BrushGameUI extends ApplicationAdapter {
         stage.dispose();
         skin.dispose();
     }
+
+    private void showWinner(String winnerName) {
+        Label winnerLabel = new Label("Winner: " + winnerName + "!", skin);
+        winnerLabel.setFontScale(2f);
+
+        // Place in center
+        winnerLabel.setPosition(stage.getWidth() / 2f - winnerLabel.getWidth() / 2f,
+                stage.getHeight() / 2f);
+
+        stage.addActor(winnerLabel);
+
+        // Simple animation: fade in + scale bounce
+        winnerLabel.getColor().a = 0;
+        winnerLabel.addAction(
+                Actions.sequence(
+                        Actions.fadeIn(1f),
+                        Actions.forever(
+                                Actions.sequence(
+                                        Actions.scaleTo(1.2f, 1.2f, 0.5f),
+                                        Actions.scaleTo(1f, 1f, 0.5f)
+                                )
+                        )
+                )
+        );
+
+        // Replay button
+        TextButton replayBtn = new TextButton("Replay", skin);
+        replayBtn.setPosition(stage.getWidth() / 2f - replayBtn.getWidth() / 2f,
+                stage.getHeight() / 2f - 100);
+
+        replayBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gameLogic.startGame();
+                // optionally clear and reset stage here
+            }
+        });
+
+        stage.addActor(replayBtn);
+    }
+
 }

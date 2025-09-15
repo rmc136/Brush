@@ -87,4 +87,59 @@ public class BrushGame {
         }
         return collected;
     }
+
+    public Deck getDeck() {
+        return deck;
+    }
+
+    public boolean allHandsEmpty() {
+        for (Player p : players) {
+            if (!p.getHand().isEmpty()) return false;
+        }
+        return true;
+    }
+
+    // Deal 3 new cards if available
+    public void dealNewRound() {
+        for (Player p : players) {
+            for (int i = 0; i < 3; i++) {
+                if (!deck.isEmpty()) {
+                    p.drawCard(deck);
+                }
+            }
+        }
+    }
+
+    public Player getWinner() {
+        if (!isGameOver()) return null;
+
+        int maxScore = 0;
+        Player winner = null;
+        int count = -1;
+
+        for (Player p : players) {
+            int score = p.calculatePoints();
+            if (score == maxScore){
+               winner = tiebreak(p, players.get(count));
+               
+            }
+            if (score > maxScore) {
+                maxScore = score;
+                winner = p;
+            }
+            count++;
+        }
+        return winner;
+    }
+
+    private Player tiebreak(Player p, Player player) {
+        if(p.getPointsStack().size() == player.getPointsStack().size()){
+            return null;
+        } else if (p.getPointsStack().size() > player.getPointsStack().size()) {
+            return p;
+            
+        }else {
+            return player;
+        }
+    }
 }
