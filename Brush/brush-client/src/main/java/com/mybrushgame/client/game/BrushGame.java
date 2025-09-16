@@ -142,4 +142,13 @@ public class BrushGame {
             return player;
         }
     }
+
+    public void finishGame() {
+        if (!tableCards.isEmpty()) {
+            Player lastPlayer = players.get((currentPlayerIndex - 1 + players.size()) % players.size());
+            lastPlayer.collectCards(new ArrayList<>(tableCards));
+            tableCards.clear();
+        }
+    }
+
 }

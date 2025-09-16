@@ -86,6 +86,8 @@ public class BrushGameUI extends ApplicationAdapter {
             handUI.update(); // refresh human hand
         }
         if (gameLogic.isGameOver()) {
+            gameLogic.finishGame();
+            tableUI.update(gameLogic.getTableCards());
             Player winner = gameLogic.getWinner();
             if (winner != null) {
                 showWinner(winner.getName());
@@ -143,20 +145,38 @@ public class BrushGameUI extends ApplicationAdapter {
                 )
         );
 
-        // Replay button
+        // Show replay button separately
+        showReplayButton();
+    }
+
+    private void showReplayButton() {
         TextButton replayBtn = new TextButton("Replay", skin);
+
         replayBtn.setPosition(stage.getWidth() / 2f - replayBtn.getWidth() / 2f,
                 stage.getHeight() / 2f - 100);
 
         replayBtn.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gameLogic.startGame();
-                // optionally clear and reset stage here
+                resetGame();
             }
         });
 
         stage.addActor(replayBtn);
     }
+
+    private void resetGame() {
+        // Dispose old stage before reinitializing
+        stage.dispose();
+
+        // Recreate stage & UI
+        stage = new Stage(new ScreenViewport());
+        Gdx.input.setInputProcessor(stage);
+
+        // Call your existing create() to rebuild everything
+        create();
+    }
+
+
 
 }
