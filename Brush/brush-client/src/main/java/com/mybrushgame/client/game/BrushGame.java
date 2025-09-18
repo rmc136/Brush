@@ -10,7 +10,8 @@ public class BrushGame {
     private final Deck deck = new Deck();
     private final List<Player> players = new ArrayList<>();
     private final List<Card> tableCards = new ArrayList<>();
-    private int currentPlayerIndex = 0; // who plays now
+    private int currentPlayerIndex = 0;
+    private List<Card> lastCollected = new ArrayList<>();// who plays now
 
     public void startGame() {
         players.clear();
@@ -72,18 +73,26 @@ public class BrushGame {
 
         player.getHand().remove(handCard);
 
+        List<Card> collected = new ArrayList<>();
+
         if (sum == 15 && new HashSet<>(tableCards).containsAll(selected)) {
             // valid capture
             player.collectCards(selected);
             player.collectCards(Collections.singletonList(handCard));
             tableCards.removeAll(selected);
+
+            collected.addAll(selected);
+            collected.add(handCard);
         } else {
-            // fallback: just place card on table
             tableCards.add(handCard);
         }
 
+        // store lastCollectedCards for animation
+        lastCollected = collected;
+
         advanceTurn();
     }
+
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
@@ -167,6 +176,10 @@ public class BrushGame {
         }else {
             return player;
         }
+    }
+
+    public List<Card> getLastCollectedCards() {
+        return lastCollected;
     }
 
     public void finishGame() {

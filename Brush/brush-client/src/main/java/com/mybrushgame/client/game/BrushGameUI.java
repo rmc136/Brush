@@ -18,7 +18,10 @@ import com.mybrushgame.client.ui.HandUI;
 import com.mybrushgame.client.ui.PlayerSeatUI;
 import com.mybrushgame.client.ui.ScoreUI;
 import com.mybrushgame.client.ui.TableUI;
-
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.graphics.Texture;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,6 +184,7 @@ public class BrushGameUI extends ApplicationAdapter {
 
         stage.addActor(replayBtn);
     }
+
 
     private void resetGame() {
         // Dispose old stage before reinitializing
