@@ -41,11 +41,10 @@ public class Player {
     public int calculatePoints() {
         int points = 0;
         for (Card c : pointsStack) {
-            if (c.getRank() == Rank.SEVEN) points++;               // each 7 = 1 point
-            if (c.getSuit() == Suit.DIAMONDS) points++;           // each diamond = 1 point
-            if (c.getSuit() == Suit.DIAMONDS && c.getRank() == Rank.SEVEN) points++; // 7 of diamonds = 2 points
+            if (c.getSuit() == Suit.DIAMONDS && c.getRank() == Rank.SEVEN) points++;               // each 7 = 1 point
+            else if (c.getSuit() == Suit.DIAMONDS) points++;           // each diamond = 1 point
+            else if (c.getRank() == Rank.SEVEN) points++; // 7 of diamonds = 2 points
         }
-        points += brushes; // add brush points
         return points;
     }
 

@@ -42,18 +42,44 @@ public class BrushGame {
     public List<Card> getTableCards() { return tableCards; }
 
     // Play a card (called by UI)
-    public void playCard(Player player, Card card) {
+    public void playCard(Player player, Card card, List<Card> selected) {
         if (!player.getHand().contains(card)) return;
 
         List<Card> collected = checkSum15(card);
         player.getHand().remove(card);
 
-        if (!collected.isEmpty()) {
+        if (selected.isEmpty()){
+            tableCards.add(card);
+        }
+        else if (!collected.isEmpty()) {
             player.collectCards(collected);
-            if (collected.size() == tableCards.size()) player.incrementBrushes();
+            System.out.println("Table cards before");
+            if (collected.size() == tableCards.size() + 1) player.incrementBrushes();
             tableCards.removeAll(collected);
+            System.out.println("Mão do Johnny: " + collected);
         } else {
             tableCards.add(card);
+        }
+
+        advanceTurn();
+    }
+
+    public void playCardWithSelection(Player player, Card handCard, List<Card> selected) {
+        if (!player.getHand().contains(handCard)) return;
+
+        int sum = handCard.getValue();
+        for (Card c : selected) sum += c.getValue();
+
+        player.getHand().remove(handCard);
+
+        if (sum == 15 && new HashSet<>(tableCards).containsAll(selected)) {
+            // valid capture
+            player.collectCards(selected);
+            player.collectCards(Collections.singletonList(handCard));
+            tableCards.removeAll(selected);
+        } else {
+            // fallback: just place card on table
+            tableCards.add(handCard);
         }
 
         advanceTurn();
@@ -85,6 +111,7 @@ public class BrushGame {
                 return collected;
             }
         }
+
         return collected;
     }
 
@@ -118,10 +145,9 @@ public class BrushGame {
         int count = -1;
 
         for (Player p : players) {
-            int score = p.calculatePoints();
+            int score = p.calculatePoints() + p.getBrushes();
             if (score == maxScore){
                winner = tiebreak(p, players.get(count));
-               
             }
             if (score > maxScore) {
                 maxScore = score;

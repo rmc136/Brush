@@ -12,11 +12,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.mybrushgame.client.cards.Card;
 import com.mybrushgame.client.cards.Player;
 import com.mybrushgame.client.ui.HandUI;
 import com.mybrushgame.client.ui.PlayerSeatUI;
 import com.mybrushgame.client.ui.ScoreUI;
 import com.mybrushgame.client.ui.TableUI;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BrushGameUI extends ApplicationAdapter {
 
@@ -51,7 +55,7 @@ public class BrushGameUI extends ApplicationAdapter {
         // Initialize modular UI
         scoreUI = new ScoreUI(skin, gameLogic.getPlayers());
         tableUI = new TableUI();
-        handUI = new HandUI(humanPlayer, gameLogic, this::refreshUI);
+        handUI = new HandUI(humanPlayer, gameLogic, tableUI, this::refreshUI);
         seatUI = new PlayerSeatUI(skin, leftPlayer, rightPlayer);
 
         // Parent table to layout everything
@@ -100,7 +104,13 @@ public class BrushGameUI extends ApplicationAdapter {
         for (int i = 1; i < gameLogic.getPlayers().size(); i++) {
             Player ai = gameLogic.getPlayers().get(i);
             if (!ai.getHand().isEmpty()) {
-                gameLogic.playCard(ai, ai.getHand().get(0)); // AI plays first card
+                Card cardToPlay = ai.getHand().get(0); // AI plays first card
+
+                // Make a non-empty list so it doesn't enter the empty branch
+                List<Card> selectedForAI = new ArrayList<>();
+                selectedForAI.add(cardToPlay); // or any placeholder card from table
+
+                gameLogic.playCard(ai, cardToPlay, selectedForAI);
             }
         }
         refreshUI();
@@ -122,7 +132,14 @@ public class BrushGameUI extends ApplicationAdapter {
     }
 
     private void showWinner(String winnerName) {
-        Label winnerLabel = new Label("Winner: " + winnerName + "!", skin);
+        Player player = null;
+        for(Player p : gameLogic.getPlayers()){
+            if (winnerName.equals(p.getName())){
+                player = p;
+            }
+        }
+        int points = player.calculatePoints() + player.getBrushes();
+        Label winnerLabel = new Label("Winner: " + winnerName + "! With " + points + " points!", skin);
         winnerLabel.setFontScale(2f);
 
         // Place in center
