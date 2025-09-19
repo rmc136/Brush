@@ -97,6 +97,7 @@ public class BrushGameUI extends ApplicationAdapter {
             tableUI.update(gameLogic.getTableCards());
             Player winner = gameLogic.getWinner();
             if (winner != null) {
+                scoreUI.update(gameLogic.getPlayers());
                 showWinner(winner.getName());
             }
         }

@@ -7,7 +7,8 @@ public class Player {
     private final String name;
     private final List<Card> hand = new ArrayList<>();        // current hand (max 3 cards)
     private final List<Card> pointsStack = new ArrayList<>(); // collected cards for points
-    private int brushes = 0;                                  // brush count
+    private int brushes = 0;
+    private final List<Card> pointsEnd = new ArrayList<>();// brush count
 
     public Player(String name) {
         this.name = name;
@@ -38,13 +39,24 @@ public class Player {
         return brushes;
     }
 
+    public int getPointsFinal(){
+        return pointsEnd.size();
+    }
+
     public int calculatePoints() {
         int points = 0;
         for (Card c : pointsStack) {
-            if (c.getSuit() == Suit.DIAMONDS && c.getRank() == Rank.SEVEN) points++;               // each 7 = 1 point
-            else if (c.getSuit() == Suit.DIAMONDS) points++;           // each diamond = 1 point
-            else if (c.getRank() == Rank.SEVEN) points++; // 7 of diamonds = 2 points
+            if (c.getSuit() == Suit.DIAMONDS && c.getRank() == Rank.SEVEN){
+                points += 2;// 7 of diamonds = 2 points
+            }
+            else if (c.getSuit() == Suit.DIAMONDS){
+                points++;           // each diamond = 1 point
+            }
+            else if (c.getRank() == Rank.SEVEN){
+                points++; // each 7 = 1 point
+            }
         }
+
         return points;
     }
 

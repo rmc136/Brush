@@ -54,10 +54,8 @@ public class BrushGame {
         }
         else if (!collected.isEmpty()) {
             player.collectCards(collected);
-            System.out.println("Table cards before");
             if (collected.size() == tableCards.size() + 1) player.incrementBrushes();
             tableCards.removeAll(collected);
-            System.out.println("Mão do Johnny: " + collected);
         } else {
             tableCards.add(card);
         }
@@ -77,8 +75,10 @@ public class BrushGame {
 
         if (sum == 15 && new HashSet<>(tableCards).containsAll(selected)) {
             // valid capture
+            System.out.println("Cards i take from table and my card: " + selected + handCard);
             player.collectCards(selected);
             player.collectCards(Collections.singletonList(handCard));
+            if (selected.size() == tableCards.size()) player.incrementBrushes();
             tableCards.removeAll(selected);
 
             collected.addAll(selected);
@@ -149,33 +149,37 @@ public class BrushGame {
     public Player getWinner() {
         if (!isGameOver()) return null;
 
-        int maxScore = 0;
         Player winner = null;
-        int count = -1;
+        int bestScore = Integer.MIN_VALUE;
 
         for (Player p : players) {
-            int score = p.calculatePoints() + p.getBrushes();
-            if (score == maxScore){
-               winner = tiebreak(p, players.get(count));
-            }
-            if (score > maxScore) {
-                maxScore = score;
+            int score = p.calculatePoints() + p.getBrushes(); // total score
+            // choose higher score, or apply tiebreak if equal
+            if (winner == null || score > bestScore) {
+                bestScore = score;
                 winner = p;
+            } else if (score == bestScore) {
+                winner = tiebreak(winner, p);
+                // ensure bestScore remains the same (they tied on score)
             }
-            count++;
         }
         return winner;
     }
 
-    private Player tiebreak(Player p, Player player) {
-        if(p.getPointsStack().size() == player.getPointsStack().size()){
-            return null;
-        } else if (p.getPointsStack().size() > player.getPointsStack().size()) {
-            return p;
-            
-        }else {
-            return player;
-        }
+    /**
+     * Tie-break rules (in order):
+     * 1) player with more cards in their points stack wins
+     * 2) if still tied, flip a coin (random pick)
+     */
+    private Player tiebreak(Player a, Player b) {
+        int aCards = a.getPointsStack().size();
+        int bCards = b.getPointsStack().size();
+
+        if (aCards > bCards) return a;
+        if (bCards > aCards) return b;
+
+        // final fallback: random pick (you could also implement deterministic rule instead)
+        return Math.random() < 0.5 ? a : b;
     }
 
     public List<Card> getLastCollectedCards() {
