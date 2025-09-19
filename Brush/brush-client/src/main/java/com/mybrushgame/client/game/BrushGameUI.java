@@ -1,7 +1,8 @@
 package com.mybrushgame.client.game;
 
-import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -14,18 +15,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mybrushgame.client.cards.Card;
 import com.mybrushgame.client.cards.Player;
-import com.mybrushgame.client.ui.HandUI;
-import com.mybrushgame.client.ui.PlayerSeatUI;
-import com.mybrushgame.client.ui.ScoreUI;
-import com.mybrushgame.client.ui.TableUI;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.graphics.Texture;
+import com.mybrushgame.client.ui.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class BrushGameUI extends ApplicationAdapter {
+public class BrushGameUI implements Screen {
 
     private Stage stage;
     private Skin skin;
@@ -37,10 +32,16 @@ public class BrushGameUI extends ApplicationAdapter {
     private ScoreUI scoreUI;
     private TableUI tableUI;
     private HandUI handUI;
-    PlayerSeatUI seatUI;
+    private PlayerSeatUI seatUI;
+    private final Game game;
+    private final String mode;
 
+    public BrushGameUI(Game game, String mode) {
+        this.game = game;
+        this.mode = mode;
+    }
     @Override
-    public void create() {
+    public void show() {
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
@@ -50,8 +51,7 @@ public class BrushGameUI extends ApplicationAdapter {
         gameLogic = new BrushGame();
         gameLogic.startGame();
 
-        humanPlayer = gameLogic.getPlayers().get(0); // first player is human
-        Player humanPlayer = gameLogic.getPlayers().get(0);
+        humanPlayer = gameLogic.getPlayers().get(0);
         Player leftPlayer = gameLogic.getPlayers().get(1);
         Player rightPlayer = gameLogic.getPlayers().get(2);
 
@@ -61,7 +61,7 @@ public class BrushGameUI extends ApplicationAdapter {
         handUI = new HandUI(humanPlayer, gameLogic, tableUI, this::refreshUI);
         seatUI = new PlayerSeatUI(skin, leftPlayer, rightPlayer);
 
-        // Parent table to layout everything
+        // Layout table
         Table mainTable = new Table();
         mainTable.setFillParent(true);
 
@@ -73,7 +73,6 @@ public class BrushGameUI extends ApplicationAdapter {
         stage.addActor(seatUI.getTable());
         seatUI.update();
 
-        // Initial render
         refreshUI();
     }
 
@@ -81,6 +80,7 @@ public class BrushGameUI extends ApplicationAdapter {
         scoreUI.update(gameLogic.getPlayers());
         tableUI.update(gameLogic.getTableCards());
         handUI.update();
+
         // Let AI play if it's their turn
         while (!(gameLogic.getCurrentPlayer().equals(humanPlayer)) && !gameLogic.isGameOver()) {
             playAITurns();
@@ -90,8 +90,9 @@ public class BrushGameUI extends ApplicationAdapter {
         // If all players are out of cards but deck still has cards → deal new ones
         if (gameLogic.allHandsEmpty() && !gameLogic.getDeck().isEmpty()) {
             gameLogic.dealNewRound();
-            handUI.update(); // refresh human hand
+            handUI.update();
         }
+
         if (gameLogic.isGameOver()) {
             gameLogic.finishGame();
             tableUI.update(gameLogic.getTableCards());
@@ -108,12 +109,9 @@ public class BrushGameUI extends ApplicationAdapter {
         for (int i = 1; i < gameLogic.getPlayers().size(); i++) {
             Player ai = gameLogic.getPlayers().get(i);
             if (!ai.getHand().isEmpty()) {
-                Card cardToPlay = ai.getHand().get(0); // AI plays first card
-
-                // Make a non-empty list so it doesn't enter the empty branch
+                Card cardToPlay = ai.getHand().get(0);
                 List<Card> selectedForAI = new ArrayList<>();
-                selectedForAI.add(cardToPlay); // or any placeholder card from table
-
+                selectedForAI.add(cardToPlay);
                 gameLogic.playCard(ai, cardToPlay, selectedForAI);
             }
         }
@@ -121,12 +119,28 @@ public class BrushGameUI extends ApplicationAdapter {
     }
 
     @Override
-    public void render() {
+    public void render(float delta) {
         Gdx.gl.glClearColor(0.1f, 0.2f, 0.4f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        stage.act(Gdx.graphics.getDeltaTime());
+        stage.act(delta);
         stage.draw();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void pause() {}
+
+    @Override
+    public void resume() {}
+
+    @Override
+    public void hide() {
+        dispose();
     }
 
     @Override
@@ -137,8 +151,8 @@ public class BrushGameUI extends ApplicationAdapter {
 
     private void showWinner(String winnerName) {
         Player player = null;
-        for(Player p : gameLogic.getPlayers()){
-            if (winnerName.equals(p.getName())){
+        for (Player p : gameLogic.getPlayers()) {
+            if (winnerName.equals(p.getName())) {
                 player = p;
             }
         }
@@ -146,13 +160,11 @@ public class BrushGameUI extends ApplicationAdapter {
         Label winnerLabel = new Label("Winner: " + winnerName + "! With " + points + " points!", skin);
         winnerLabel.setFontScale(2f);
 
-        // Place in center
         winnerLabel.setPosition(stage.getWidth() / 2f - winnerLabel.getWidth() / 2f,
                 stage.getHeight() / 2f);
 
         stage.addActor(winnerLabel);
 
-        // Simple animation: fade in + scale bounce
         winnerLabel.getColor().a = 0;
         winnerLabel.addAction(
                 Actions.sequence(
@@ -166,8 +178,8 @@ public class BrushGameUI extends ApplicationAdapter {
                 )
         );
 
-        // Show replay button separately
         showReplayButton();
+        showHomeButton();
     }
 
     private void showReplayButton() {
@@ -186,19 +198,28 @@ public class BrushGameUI extends ApplicationAdapter {
         stage.addActor(replayBtn);
     }
 
+    private void showHomeButton() {
+        TextButton homeBtn = new TextButton("Home", skin);
 
-    private void resetGame() {
-        // Dispose old stage before reinitializing
-        stage.dispose();
+        homeBtn.setPosition(stage.getWidth() / 2f - homeBtn.getWidth() / 2f,
+                stage.getHeight() / 2.2f - 100);
 
-        // Recreate stage & UI
-        stage = new Stage(new ScreenViewport());
-        Gdx.input.setInputProcessor(stage);
+        homeBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                returnHome();
+            }
+        });
 
-        // Call your existing create() to rebuild everything
-        create();
+        stage.addActor(homeBtn);
     }
 
+    private void resetGame() {
+        game.setScreen(new BrushGameUI(game, mode));
+        // rebuild everything
+    }
 
-
+    private void returnHome() {
+        game.setScreen(new HomeScreenUI(game));
+    }
 }
