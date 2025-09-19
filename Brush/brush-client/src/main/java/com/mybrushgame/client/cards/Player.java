@@ -8,7 +8,6 @@ public class Player {
     private final List<Card> hand = new ArrayList<>();        // current hand (max 3 cards)
     private final List<Card> pointsStack = new ArrayList<>(); // collected cards for points
     private int brushes = 0;
-    private final List<Card> pointsEnd = new ArrayList<>();// brush count
 
     public Player(String name) {
         this.name = name;
@@ -37,10 +36,6 @@ public class Player {
 
     public int getBrushes() {
         return brushes;
-    }
-
-    public int getPointsFinal(){
-        return pointsEnd.size();
     }
 
     public int calculatePoints() {
