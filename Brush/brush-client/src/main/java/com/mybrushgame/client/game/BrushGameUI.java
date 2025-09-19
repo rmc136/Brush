@@ -4,13 +4,11 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.mybrushgame.client.cards.Card;
@@ -113,6 +111,8 @@ public class BrushGameUI implements Screen {
                 List<Card> selectedForAI = new ArrayList<>();
                 selectedForAI.add(cardToPlay);
                 gameLogic.playCard(ai, cardToPlay, selectedForAI);
+                List<Card> collected = new ArrayList<>(gameLogic.getLastCollectedCards());
+                animateAICards(ai, cardToPlay, collected);
             }
         }
         refreshUI();
@@ -212,6 +212,58 @@ public class BrushGameUI implements Screen {
         });
 
         stage.addActor(homeBtn);
+    }
+
+    private void animateAICards(Player ai, Card aiCard, List<Card> collectedCards) {
+        Stage stage = this.stage;
+        if (stage == null) return;
+
+        // AI hand position
+        float aiX = (ai == gameLogic.getPlayers().get(1)) ? 100 : stage.getWidth() - 200;
+        float aiY = stage.getHeight() - 120;
+
+        // Table center
+        Table tableParent = tableUI.getTable();
+        float centerX = tableParent.getX() + tableParent.getWidth() / 2f;
+        float centerY = tableParent.getY() + tableParent.getHeight() / 2f;
+
+        // Build animation list: always include AI card, then collected table cards
+        List<Card> animCards = new ArrayList<>();
+        animCards.add(aiCard);
+        for (Card c : collectedCards) {
+            if (!c.equals(aiCard)) animCards.add(c);
+        }
+
+        int n = animCards.size();
+        float spacing = 30f;
+
+        for (int i = 0; i < n; i++) {
+            Card card = animCards.get(i);
+            Texture texture = new Texture("cards/" + card.getImageName());
+            Image img = new Image(texture);
+            img.setSize(120, 140);
+            img.setPosition(aiX, aiY);
+            stage.addActor(img);
+
+            float targetX = centerX - ((n - 1) * spacing) / 2f + i * spacing;
+            float targetY = centerY;
+
+            boolean moveToAIHand = !collectedCards.isEmpty(); // only move back if AI captured
+
+            if (moveToAIHand) {
+                img.addAction(Actions.sequence(
+                        Actions.moveTo(targetX, targetY, 0.5f),
+                        Actions.delay(1f),
+                        Actions.moveTo(aiX, aiY, 0.5f),
+                        Actions.run(img::remove)
+                ));
+            } else {
+                img.addAction(Actions.sequence(
+                        Actions.moveTo(targetX, targetY, 0.5f),
+                        Actions.run(img::remove)
+                ));
+            }
+        }
     }
 
     private void resetGame() {

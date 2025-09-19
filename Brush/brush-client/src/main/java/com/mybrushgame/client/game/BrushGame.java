@@ -59,7 +59,7 @@ public class BrushGame {
         } else {
             tableCards.add(card);
         }
-
+        lastCollected = new ArrayList<>(collected);
         advanceTurn();
     }
 
